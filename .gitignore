@@ -5,3 +5,7 @@ publitas-inventory.raw.json
 .DS_Store
 
 alien-pizza.*
+
+.env
+*.cookie
+publitas-session*
