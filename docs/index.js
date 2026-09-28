@@ -1,11 +1,10 @@
-const GROUP = 'mark-ezra-designs';
-const PUBLITAS_API =
-  `https://api.publitas.com/v1/groups/${GROUP}/publications.json`;
+const GROUP = "mark-ezra-designs";
+const PUBLITAS_API = `https://api.publitas.com/v1/groups/${GROUP}/publications.json`;
 
-const FALLBACK = 'publitas-inventory.json';
+const FALLBACK = "publitas-inventory.json";
 
 async function getLivePublications() {
-  const response = await fetch(PUBLITAS_API, { cache: 'no-store' });
+  const response = await fetch(PUBLITAS_API, { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error(`Publitas returned ${response.status}`);
@@ -14,16 +13,14 @@ async function getLivePublications() {
   const publications = await response.json();
 
   return Promise.all(
-    publications.map(async publication => {
+    publications.map(async (publication) => {
       const detailResponse = await fetch(
         `https://api.publitas.com/v1/groups/${GROUP}/publications/${publication.slug}`,
-        { cache: 'no-store' }
+        { cache: "no-store" },
       );
 
       if (!detailResponse.ok) {
-        throw new Error(
-          `Publitas detail returned ${detailResponse.status}`
-        );
+        throw new Error(`Publitas detail returned ${detailResponse.status}`);
       }
 
       const detail = await detailResponse.json();
@@ -35,11 +32,11 @@ async function getLivePublications() {
       return {
         id: String(publication.id),
         title: publication.title,
-        status: 'public',
+        status: "public",
         url: `https://view.publitas.com/${GROUP}/${publication.slug}/`,
-        cover: `https://view.publitas.com${pages[0]}-at200.jpg`
+        cover: `https://view.publitas.com${pages[0]}-at200.jpg`,
       };
-    })
+    }),
   );
 }
 
@@ -54,40 +51,38 @@ async function getFallbackPublications() {
 }
 
 function renderPublications(publications) {
-  const index = document.getElementById('index');
+  const index = document.getElementById("index");
   index.replaceChildren();
 
   publications
-    .filter(publication =>
-      publication &&
-      publication.status === 'public' &&
-      publication.url &&
-      publication.cover
+    .filter(
+      (publication) =>
+        publication &&
+        publication.status === "public" &&
+        publication.url &&
+        publication.cover,
     )
-    .forEach(publication => {
-      const link = document.createElement('a');
-      link.className = 'publication';
+    .forEach((publication) => {
+      const link = document.createElement("a");
+      link.className = "publication";
       link.href = publication.url;
-      link.target = '_blank';
-      link.rel = 'noopener';
+      link.target = "_blank";
+      link.rel = "noopener";
 
-      const img = document.createElement('img');
+      const img = document.createElement("img");
       img.src = publication.cover;
-      img.alt = publication.title || '';
-      img.loading = 'lazy';
+      img.alt = publication.title || "";
+      img.loading = "lazy";
 
-      const title = document.createElement('span');
-      title.className = 'title';
+      const title = document.createElement("span");
+      title.className = "title";
 
-      const slug = new URL(publication.url)
-        .pathname
-        .split('/')
+      const slug = new URL(publication.url).pathname
+        .split("/")
         .filter(Boolean)
         .pop();
 
-      title.textContent = slug
-        .replace(/[-_]+/g, ' ')
-        .toUpperCase();
+      title.textContent = slug.replace(/[-_]+/g, " ").toUpperCase();
 
       link.append(img, title);
       index.append(link);
@@ -100,15 +95,21 @@ async function syncPublitas() {
     renderPublications(publications);
     console.log(`Z/INDEX: live Publitas catalog (${publications.length})`);
   } catch (error) {
-    console.warn('Z/INDEX: live Publitas check failed; using fallback.', error);
+    console.warn("Z/INDEX: live Publitas check failed; using fallback.", error);
 
     try {
       const publications = await getFallbackPublications();
       renderPublications(publications);
     } catch (fallbackError) {
-      console.error('Z/INDEX inventory error:', fallbackError);
+      console.error("Z/INDEX inventory error:", fallbackError);
     }
   }
+}
+
+const syncButton = document.getElementById("sync-button");
+
+if (syncButton) {
+  syncButton.addEventListener("click", syncPublitas);
 }
 
 syncPublitas();
